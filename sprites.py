@@ -4,18 +4,19 @@ import math
 
 
 class Polygon:
-    def __init__(self, img: object, pos: tuple, space: object, mass=5.0) -> None:
+    def __init__(self, img: object, pos: tuple, space: object, mass=3.0) -> None:
         self.image = img
         self.width = img.get_rect().width
         self.height = img.get_rect().height
 
         # Pymunk properties
-        moment = 2000
+        moment = 1500
         body = pymunk.Body(mass, moment)
         body.position = pymunk.Vec2d(pos)
         shape = pymunk.Poly.create_box(body, (self.width, self.height))
         shape.color = (0, 0, 255)
-        shape.friction = 0.6
+        shape.friction = 1
+        shape.elasticity = 0.5
         shape.collision_type = 2
         space.add(body, shape)
         self.body = body
@@ -46,7 +47,7 @@ class Bird:
         inertia = pymunk.moment_for_circle(mass, 0, radius, (0, 0))
         body = pymunk.Body(mass, inertia)
         body.position = x, y
-        power = distance * 40
+        power = distance * 42
         impulse = power * pymunk.Vec2d(1, 0)
         angle = -angle
         body.apply_impulse_at_local_point(impulse.rotated(angle))

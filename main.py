@@ -1,4 +1,5 @@
 import pygame
+
 import pymunk
 from sprites import Polygon
 from sprites import Bird
@@ -7,12 +8,18 @@ import math
 WIN_WIDTH = 1280
 WIN_HEIGHT = 720
 
+pygame.init()
+pygame.mixer.init()
 
 class Runtime:
     def __init__(self):
         pygame.display.set_caption('Angry Birds by Ivan Ivanov')
         self.screen = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
         self.bird_being_dragged = False
+
+        pygame.mixer.music.load('assets/sounds/angry-birds.wav')
+        pygame.mixer.music.set_volume(0.3)
+        self.sound_fly = pygame.mixer.Sound('assets/sounds/fly.mp3')
 
         self.mouse_x = 0
         self.mouse_y = 0
@@ -57,7 +64,8 @@ class Runtime:
     def setup(self):
         # Static floor
         static_body = pymunk.Body(body_type=pymunk.Body.STATIC)
-        self.static_lines = [pymunk.Segment(static_body, (0.0, -24.0), (1280.0, -24.0), 0.0)]
+        self.static_lines = [pymunk.Segment(static_body, (0.0, -24.0), (1280.0, -24.0), 0.0),
+                             pymunk.Segment(static_body, (1279.0, 720.0), (1279.0, -24.0), 0.0)]
         for line in self.static_lines:
             line.elasticity = 0.95
             line.friction = 1
@@ -77,14 +85,35 @@ class Runtime:
              Polygon(self.beam_image, (1086, 116), self.space),
              Polygon(self.column_image, (1000, 127), self.space),
              Polygon(self.column_image, (1086, 127), self.space),
-             Polygon(self.beam_image, (1042, 181), self.space),
-             Polygon(self.img_pig, (1042, 250), self.space),
+             Polygon(self.beam_image, (1042, 181), self.space)
              ]
         )
+        self.pigs.extend([
+            Polygon(self.img_pig, (1042, 250), self.space)
+        ])
+
+    def post_solve_bird_pig(self, arbiter, space, _):
+        """Collision between bird and pig"""
+        a, b = arbiter.shapes
+        for pig in self.pigs:
+            if pig.body == b.body:
+                self.remove_pig(pig)
+
+
+
+
 
     def run(self):
-        pygame.init()
         clock = pygame.time.Clock()
+
+        # bird and pigs
+        self.space.add_collision_handler(0, 1).post_solve = self.post_solve_bird_pig
+        # bird and wood
+        self.space.add_collision_handler(0, 2).post_solve = self.post_solve_bird_pig
+        # pig and wood
+        self.space.add_collision_handler(1, 2).post_solve = self.post_solve_bird_pig
+
+        pygame.mixer.music.play(-1)
 
         running = True
         while running:
@@ -129,6 +158,7 @@ class Runtime:
                         self.birds.append(
                             Bird(self.img_angry_bird, distance, angle, x, 600 - y, self.space)
                         )
+                        self.sound_fly.play()
 
             # Drawing
             self.draw(self.screen)
@@ -189,6 +219,13 @@ class Runtime:
         elif self.game_state == 4:
             # You-win drawing goes here
             pass
+
+    def remove_pig(self, pig):
+        try:
+            self.pigs.remove(pig)
+        except pygame.error as err:
+            print(err)
+
 
     @staticmethod
     def to_pygame(p):
