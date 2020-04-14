@@ -3,6 +3,7 @@ import pygame
 import pymunk
 from sprites import Polygon
 from sprites import Bird
+from sprites import Pig
 import math
 
 WIN_WIDTH = 1280
@@ -10,6 +11,7 @@ WIN_HEIGHT = 720
 
 pygame.init()
 pygame.mixer.init()
+
 
 class Runtime:
     def __init__(self):
@@ -26,7 +28,7 @@ class Runtime:
 
         # -- Pymunk
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, -700.0)
+        self.space.gravity = (0.0, -750.0)
 
         # Loading images
         self.img_landing = pygame.image.load('assets/images/landing_img.png')
@@ -89,7 +91,7 @@ class Runtime:
              ]
         )
         self.pigs.extend([
-            Polygon(self.img_pig, (1042, 250), self.space)
+            Pig(self.img_pig, (1042, 250), self.space)
         ])
 
     def post_solve_bird_pig(self, arbiter, space, _):
@@ -97,11 +99,7 @@ class Runtime:
         a, b = arbiter.shapes
         for pig in self.pigs:
             if pig.body == b.body:
-                self.remove_pig(pig)
-
-
-
-
+                pig.take_damage(10)
 
     def run(self):
         clock = pygame.time.Clock()
@@ -225,7 +223,6 @@ class Runtime:
             self.pigs.remove(pig)
         except pygame.error as err:
             print(err)
-
 
     @staticmethod
     def to_pygame(p):
