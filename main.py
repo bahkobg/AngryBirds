@@ -94,12 +94,15 @@ class Runtime:
             Pig(self.img_pig, (1042, 250), self.space)
         ])
 
-    def post_solve_bird_pig(self, arbiter, space, _):
+    def post_solve_bird_pig(self, arbiter, space, data):
         """Collision between bird and pig"""
         a, b = arbiter.shapes
         for pig in self.pigs:
             if pig.body == b.body:
-                pig.take_damage(10)
+                if pig.health > 0:
+                    pig.take_damage(10)
+                else:
+                    self.remove_pig(pig)
 
     def run(self):
         clock = pygame.time.Clock()
